@@ -1,0 +1,22 @@
+{
+  "name": "kz-wr",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/cli.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GMargiani98/kz-wr.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GMargiani98/kz-wr/issues"
+  },
+  "homepage": "https://github.com/GMargiani98/kz-wr#readme"
+}
