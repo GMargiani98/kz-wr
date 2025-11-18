@@ -4,7 +4,12 @@ import type {
   ScraperResult,
 } from '../types/index.js';
 
-export async function scrapeKreedz(mapName: string): Promise<ScraperResult> {
+type KzMode = 'cp' | 'non-cp';
+
+export async function scrapeKreedz(
+  mapName: string,
+  mode: KzMode = 'non-cp'
+): Promise<ScraperResult> {
   try {
     const response = await fetch(
       'https://kreedz.com/api/record/all-demos?sortColumn=releaseDate&sortDirection=DESC'
@@ -18,12 +23,26 @@ export async function scrapeKreedz(mapName: string): Promise<ScraperResult> {
     const data: KreedzApiRecord[] =
       (await response.json()) as KreedzApiRecord[];
 
-    const firstRecord = data.find((record) => record.mapName === mapName);
+    const mapRecords = data.filter((record) => record.mapName === mapName);
 
-    if (!firstRecord) {
-      console.log('No records found for map:', mapName, 'on Kreedz');
+    if (mapRecords.length === 0) {
+      console.log(`No records found for map: ${mapName} on Kreedz`);
       return null;
     }
+
+    const hasCp = mode === 'cp';
+    const filteredRecords = mapRecords.filter(
+      (record) => record.hasCp === hasCp
+    );
+
+    if (filteredRecords.length === 0) {
+      console.log(
+        `No ${mode.toUpperCase()} records found for map: ${mapName} on Kreedz`
+      );
+      return null;
+    }
+
+    const firstRecord = filteredRecords[0];
 
     let downloadLink: string | null = null;
 

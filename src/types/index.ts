@@ -23,6 +23,7 @@ export interface KreedzApiRecord {
   youtubeLink?: string | null;
   difficulty?: string;
   demoId: string;
+  hasCp: boolean;
   [key: string]: unknown;
 }
 

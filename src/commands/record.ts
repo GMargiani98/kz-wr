@@ -14,14 +14,16 @@ export async function recordCommand(
   try {
     const mode = options.cp ? 'cp' : 'non-cp';
 
-    let result: ScraperResult = await scrapeKreedz(mapName.trim());
+    let result: ScraperResult = await scrapeKreedz(mapName.trim(), mode);
 
     if (!result) {
       result = await scrapeKzRush(mapName.trim(), mode);
     }
 
     if (!result) {
-      console.log(`No records found for map: ${mapName}`);
+      console.log(
+        `No records found for map: ${mapName} (${mode.toUpperCase()})`
+      );
       return;
     }
 
