@@ -1,6 +1,6 @@
 # kz-wr
 
-A CLI tool for looking up KZ (Kreedz Climbing) world records from Kreedz.com and KZ-Rush.ru.
+A CLI tool for looking up KZ (CS1.6) world records from Kreedz.com and KZ-Rush.ru.
 
 ## Installation
 
