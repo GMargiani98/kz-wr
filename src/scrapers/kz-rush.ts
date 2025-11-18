@@ -10,44 +10,73 @@ interface KzRushRawRecord {
   youtubeLink: string | null;
 }
 
-export async function scrapeKzRush(mapName: string): Promise<ScraperResult> {
+type KzMode = 'cp' | 'non-cp';
+
+async function scrapeKzRushEndpoint(
+  url: string,
+  mapName: string
+): Promise<KzRushRawRecord | null> {
   try {
-    const listUrl = 'https://kz-rush.ru/en/records/maps/noncp';
-    const listResponse = await fetch(listUrl);
+    const listResponse = await fetch(url);
 
     if (!listResponse.ok) {
-      console.error('Failed to fetch from KZ-Rush');
       return null;
     }
 
     const listHtml = await listResponse.text();
     const $ = cheerio.load(listHtml);
 
-    const records: KzRushRawRecord[] = [];
+    let foundRecord: KzRushRawRecord | null = null;
 
     $('#maps-table-id tr').each((_, row) => {
       const td = $(row).find('td');
 
       const name = td.eq(0).find('a').first().text().trim();
-      const mapUrl =
-        'https://kz-rush.ru' + td.eq(0).find('a').first().attr('href');
 
       if (name === mapName) {
-        records.push({
+        const mapUrl =
+          'https://kz-rush.ru' + td.eq(0).find('a').first().attr('href');
+        const downloadHref = td.eq(4).find('a').eq(0).attr('href');
+        const youtubeHref = td.eq(4).find('a').eq(1).attr('href');
+
+        foundRecord = {
           mapName: name,
           mapUrl,
           time: td.eq(1).text().trim(),
           player: td.eq(2).find('a').text().trim(),
-          downloadLink:
-            'https://kz-rush.ru' + td.eq(4).find('a').eq(0).attr('href'),
-          youtubeLink: td.eq(4).find('a').eq(1).attr('href') || null,
-        });
+          downloadLink: downloadHref
+            ? 'https://kz-rush.ru' + downloadHref
+            : 'N/A',
+          youtubeLink: youtubeHref || null,
+        };
+
+        return false;
       }
     });
 
-    const firstRecord = records[0];
+    return foundRecord;
+  } catch (error) {
+    console.error('Error scraping KZ-Rush endpoint:', url, error);
+    return null;
+  }
+}
+
+export async function scrapeKzRush(
+  mapName: string,
+  mode: KzMode = 'non-cp'
+): Promise<ScraperResult> {
+  try {
+    const endpoint =
+      mode === 'cp'
+        ? 'https://kz-rush.ru/en/records/maps/cp'
+        : 'https://kz-rush.ru/en/records/maps/noncp';
+
+    const firstRecord = await scrapeKzRushEndpoint(endpoint, mapName);
+
     if (!firstRecord) {
-      console.log('No records found for map:', mapName, 'on KZ-Rush');
+      console.log(
+        `No records found for map: ${mapName} on KZ-Rush (${mode.toUpperCase()})`
+      );
       return null;
     }
 
@@ -63,11 +92,12 @@ export async function scrapeKzRush(mapName: string): Promise<ScraperResult> {
 
     return {
       mapName: firstRecord.mapName,
-      playerName: firstRecord.player,
-      time: firstRecord.time,
+      playerName: firstRecord.player || 'N/A',
+      time: firstRecord.time || 'N/A',
       youtubeLink: firstRecord.youtubeLink,
       difficulty,
-      downloadLink: firstRecord.downloadLink,
+      downloadLink:
+        firstRecord.downloadLink === 'N/A' ? null : firstRecord.downloadLink,
     };
   } catch (error) {
     console.error('Error in scrapeKzRush:', error);
